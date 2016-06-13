@@ -23,9 +23,9 @@ allTcins = [];
 for file in htmlPaths:
     with open(file) as infile:
         soup = BeautifulSoup(infile, 'html.parser')
-        tcin1 = "none"
-        tcin2 = "none"
-        title = "none"
+        tcin1 = "n/a"
+        tcin2 = "n/a"
+        title = "n/a"
         for pin in soup.find_all("div", class_="pinWrapper"):
             for desc in pin.find_all("p", class_="pinDescription"):
                 title = desc.get_text("|", strip=True)
@@ -37,19 +37,19 @@ for file in htmlPaths:
                 test = re.search(r"(?<!\d)\d{6,8}(?!\d)", url)
                 if test:
                     tcin2 = test.group()
-            if tcin1 != "none":
+            if tcin1 != "n/a":
                 tcin = tcin1
             else:
                 tcin = tcin2
-            if tcin != "none":
+            if tcin != "n/a":
                 print(tcin)
             else:
                 print("NO TCIN FOR: " + title)
             allTcins.append(tcin)
-            tcin = "none"
-            tcin1 = "none"
-            tcin2 = "none"
-            title = "none"
+            tcin = "n/a"
+            tcin1 = "n/a"
+            tcin2 = "n/a"
+            title = "n/a"
 print("total items: " ,len(allTcins))
 payload = {'key': '6bf34d7581ae95886036b732'}
 csvRow = ['Concept Store','X','TCIN','DP','X','DESC,BRAND','n/a','any','x','1','X','X','X','X','X','7/18/2016','PRICE','X','7/15/2016','X','Royalston','7/18-9/9/16','Royalston']
