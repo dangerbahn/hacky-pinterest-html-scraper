@@ -52,7 +52,7 @@ for file in htmlPaths:
             title = "none"
 print("total items: " ,len(allTcins))
 payload = {'key': '6bf34d7581ae95886036b732'}
-csvRow = ['Concept Store','X','TCIN','DP','X','DESC,BRAND','','any','x','1','X','X','X','X','X','7/18/2016','PRICE','X','7/15/2016','X','Royalston','7/18-9/9/16','Royalston']
+csvRow = ['Concept Store','X','TCIN','DP','X','DESC,BRAND','n/a','any','x','1','X','X','X','X','X','7/18/2016','PRICE','X','7/15/2016','X','Royalston','7/18-9/9/16','Royalston']
 with open('tcins.csv', 'wb') as fp:
     a = csv.writer(fp, delimiter=',')
     for tcin in allTcins:
@@ -60,14 +60,14 @@ with open('tcins.csv', 'wb') as fp:
         r = requests.get('https://www.tgtappdata.com/v1/products/pdp/TCIN/'+tcin, params=payload)
         data = json.loads(r.text)
         dpci = "n/a"
-        desc = "n/a"
+        title = "n/a"
         brand = "n/a"
         if type(data) is list:
             for key, value in data[0].items():
                 if key == 'dpci':
                     dpci = value.split("-")[0]
-                if key == 'description':
-                    desc = value
+                if key == 'title':
+                    title = value
                 if key == 'manufacturingBrand':
                     brand = value
                 if key == 'variations':
@@ -76,6 +76,6 @@ with open('tcins.csv', 'wb') as fp:
                             dpci = value2 .split("-")[0]
         csvRow[2] = tcin
         csvRow[3] = dpci
-        csvRow[5] = desc
+        csvRow[5] = title
         csvRow[6] = brand
         a.writerow(csvRow)
