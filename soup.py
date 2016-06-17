@@ -57,6 +57,7 @@ for originaltcin in allTcins:
     if tcinAlreadyFound == 'no':
         filteredTcins.append(originaltcin)
 print("total filtered tcins: " ,len(filteredTcins))
+# fix! if need to generate again, make sure to create a csv for each department
 with open('tcins.csv', 'wb') as fp:
     a = csv.writer(fp, delimiter=',')
     detectedChildren = []
