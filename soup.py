@@ -8,10 +8,9 @@ import os
 import webbrowser
 reload(sys)
 sys.setdefaultencoding('utf-8')
-# url = "https://www.pinterest.com/heatherhortone/baby-approved-car-seats/"
-# webbrowser.open(url, new=0, autoraise=True)
 htmlPaths = os.listdir("html")
 allTcins = [];
+print('mega regex time...')
 for file in htmlPaths:
     with open('html/'+file) as infile:
         soup = BeautifulSoup(infile, 'html.parser')
@@ -38,7 +37,6 @@ for file in htmlPaths:
                 tcin = tcin2
             if tcin == "n/a":
                 tcin = "NO TCIN FOR: " + title
-                print("NO TCIN FOR: " + title)
             allTcins.append(tcin)
             tcin = "n/a"
             tcin1 = "n/a"
@@ -48,6 +46,7 @@ print("total items: " ,len(allTcins))
 payload = {'key': '6bf34d7581ae95886036b732'}
 csvRow = ['Concept Store','X','TCIN','DP','X','DESC','BRAND','n/a','any','x','1','X','X','X','X','X','7/18/2016','PRICE','X','7/15/2016','X','Royalston','7/18-9/9/16','Royalston','scene7 image path not found']
 filteredTcins = []
+totalNotFound = 0
 for originaltcin in allTcins:
     tcinAlreadyFound = 'no'
     for checkDuplicate in filteredTcins:
@@ -61,16 +60,36 @@ with open('tcins.csv', 'wb') as fp:
     a = csv.writer(fp, delimiter=',')
     detectedChildren = []
     for tcin in filteredTcins:
-        print("making request for...", tcin)
         dpci = "n/a"
         title = "n/a"
         brand = "n/a"
         data = "n/a"
         if tcin.isdigit():
+            print("making product request for...", tcin)
             r = requests.get('https://www.tgtappdata.com/v1/products/pdp/TCIN/'+tcin, params=payload)
             data = json.loads(r.text)
+        else:
+            scrapeTitle = tcin.split("NO TCIN FOR: ")[1]
+            searchTerm = scrapeTitle.split("|")[0]
+            print("making search request for...", searchTerm)
+            searchLoad = {'key': '6bf34d7581ae95886036b732', 'searchTerm': searchTerm, 'sortBy': 'relevance', 'offset': '0', 'limit': '1'}
+            if len(searchTerm) > 8:
+                r = requests.get('https://www.tgtappdata.com/v1/products/list', params=searchLoad)
+                raw = json.loads(r.text)
+                try:
+                    for keySearch, valueSearch in raw.items():
+                        if keySearch == 'products':
+                            data = valueSearch
+                            for keySearch2, valueSearch2 in valueSearch[0].items():
+                                if keySearch2 == 'tcin':
+                                    tcin = str(valueSearch2)
+                except KeyError:
+                    # Key is not present
+                    pass
+            else:
+                print('no tcin found anywhere...moving on.')
+                totalNotFound += 1
         hasAlreadyAddedTcins = 'no'
-
         if type(data) is list:
             isColor = 'none'
             colors = []
@@ -87,9 +106,13 @@ with open('tcins.csv', 'wb') as fp:
                         if key2 == 'dpci':
                             dpci = value2.split("-")[0]
                 if key == 'variationDimensions':
-                    if value['dimension1']:
-                        if value['dimension1'] == 'COLOR':
-                            isColor = 'dimension1'
+                    try:
+                        if value['dimension1']:
+                            if value['dimension1'] == 'COLOR':
+                                isColor = 'dimension1'
+                    except KeyError:
+                        # Key is not present
+                        pass
                     try:
                         if value['dimension2']:
                             if value['dimension2'] == 'COLOR':
@@ -99,17 +122,24 @@ with open('tcins.csv', 'wb') as fp:
                         pass
 
                 if key == 'variations':
-
                     for t in range(len(value)):
                         colorAlreadyAdded = 'no'
                         for key5, value5 in value[t].items():
                             if key5 == 'variationValues':
                                 if (isColor == 'dimension1') or (isColor == 'dimension2'):
                                     for clr in colors:
-                                        if clr == value5[isColor]:
-                                            colorAlreadyAdded = 'yes'
+                                        try:
+                                            if clr == value5[isColor]:
+                                                colorAlreadyAdded = 'yes'
+                                        except KeyError:
+                                            # Key is not present
+                                            pass
                                     if colorAlreadyAdded == 'no':
-                                        colors.append(value5[isColor])
+                                        try:
+                                            colors.append(value5[isColor])
+                                        except KeyError:
+                                            # Key is not present
+                                            pass
                                         for key4, value4 in value[t].items():
                                             if key4 == 'tcin':
                                                 currentVaraitionTcin = int(value4)
@@ -130,5 +160,7 @@ with open('tcins.csv', 'wb') as fp:
             csvRow[5] = title
             csvRow[6] = brand
             if tcin != "n/a":
-                csvRow[24] = "http://scene7.targetimg1.com/is/image/Target/"+tcin
+                csvRow[24] = "http://scene7.targetimg1.com/is/image/Target/"+str(tcin)
             a.writerow(csvRow)
+print("finished!")
+print("total items without any tcin information:", str(totalNotFound))
