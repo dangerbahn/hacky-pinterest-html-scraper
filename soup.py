@@ -6,6 +6,7 @@ import json
 import sys
 import os
 import webbrowser
+import fileinput
 reload(sys)
 sys.setdefaultencoding('utf-8')
 htmlPaths = os.listdir("html")
@@ -162,5 +163,11 @@ with open('tcins.csv', 'wb') as fp:
             if tcin != "n/a":
                 csvRow[24] = "http://scene7.targetimg1.com/is/image/Target/"+str(tcin)
             a.writerow(csvRow)
+# remove duplicate rows from csv
+seen = set()
+for line in fileinput.FileInput('tcins.csv', inplace=1):
+    if line in seen: continue
+    seen.add(line)
+    print line,
 print("finished!")
 print("total items without any tcin information:", str(totalNotFound))
