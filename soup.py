@@ -9,11 +9,11 @@ import webbrowser
 import fileinput
 reload(sys)
 sys.setdefaultencoding('utf-8')
-htmlPaths = os.listdir("html")
+htmlPaths = os.listdir("tcinhtml")
 allTcins = [];
 print('mega regex time...')
 for file in htmlPaths:
-    with open('html/'+file) as infile:
+    with open('tcinhtml/'+file) as infile:
         soup = BeautifulSoup(infile, 'html.parser')
         tcin1 = "n/a"
         tcin2 = "n/a"
